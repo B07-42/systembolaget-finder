@@ -22,6 +22,10 @@ async function findArboga() {
         );
         const storesData = await storeRes.json();
         const stores = storesData.siteSearchResults || [];
+if (stores.length > 0) {
+  status.textContent = '🔍 Store keys: ' + Object.keys(stores[0]).join(', ');
+  return;
+}
 
         if (stores.length === 0) {
           status.textContent = '😔 Inga butiker hittades i närheten.';
