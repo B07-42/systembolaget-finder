@@ -1,7 +1,18 @@
-const ARTICLE_ID = '1139232';
+const PRODUCT_ID = '61248715';
+const API_KEY = '8d39a7340ee7439f8b4c1e995c8f3e4a';
 
 function proxyUrl(url) {
   return `/api/proxy?url=${encodeURIComponent(url)}`;
+}
+
+function calcDistance(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng/2) * Math.sin(dLng/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
 async function findArboga() {
@@ -14,37 +25,50 @@ async function findArboga() {
   navigator.geolocation.getCurrentPosition(
     async ({ coords }) => {
       const { latitude: lat, longitude: lng } = coords;
-      status.textContent = '🔍 Söker butiker...';
+      status.textContent = '🔍 Hämtar butiker...';
 
       try {
+        // Get all stores
         const storeRes = await fetch(
-          proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/sitesearch/site/?lat=${lat}&lng=${lng}`)
+          proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/sitesearch/site/?lat=${lat}&lng=${lng}`),
         );
         const storesData = await storeRes.json();
         const stores = storesData.siteSearchResults || [];
 
         if (stores.length === 0) {
-          status.textContent = '😔 Inga butiker hittades i närheten.';
+          status.textContent = '😔 Inga butiker hittades.';
           return;
         }
 
-        status.textContent = `📦 Hittade ${stores.length} butiker, kontrollerar lager...`;
+        status.textContent = `📦 Kontrollerar lager i ${stores.length} butiker...`;
 
+        // Check stock in each store
         const checks = await Promise.all(
           stores.slice(0, 20).map(async (store) => {
             try {
               const res = await fetch(
-                proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?articleNumberOrBarCode=${ARTICLE_ID}&selectedSite=${store.siteId}`)
+                proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/stockbalance/store/${store.siteId}/${PRODUCT_ID}/`)
               );
               const data = await res.json();
 
+              if (!data.stock || data.stock <= 0) return null;
+
+              // Get full store info for address and coordinates
+              const storeRes = await fetch(
+                proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/site/store/${store.siteId}`)
+              );
+              const storeData = await storeRes.json();
+
+              const distance = storeData.position
+                ? calcDistance(lat, lng, storeData.position.latitude, storeData.position.longitude)
+                : null;
+
               return {
-                name: store.alias,
-                address: `${store.streetAddress}, ${store.postalCode} ${store.city}`,
-                quantity: '?',
-                shelf: '?',
-                placement: '?',
-                debug: JSON.stringify(data).slice(0, 400)
+                name: storeData.alias,
+                address: `${storeData.address}, ${storeData.postalCode} ${storeData.city}`,
+                distance,
+                stock: data.stock,
+                shelf: data.shelf,
               };
             } catch (e) {
               return null;
@@ -52,21 +76,22 @@ async function findArboga() {
           })
         );
 
-        const found = checks.filter(Boolean);
+        const found = checks
+          .filter(Boolean)
+          .sort((a, b) => (a.distance ?? 999) - (b.distance ?? 999));
 
         if (found.length === 0) {
           status.textContent = '😔 Arboga hittades inte i lager i närheten.';
           return;
         }
 
-        status.textContent = `✅ Hittade ${found.length} butiker:`;
+        status.textContent = `✅ Hittade ${found.length} butiker med Arboga i lager:`;
         results.innerHTML = found.map(s => `
           <div class="store-card">
             <h3>${s.name}</h3>
-            <p>📍 ${s.address}</p>
-            <p>📦 Antal: <strong>${s.quantity}</strong></p>
+            <p>📍 ${s.address}${s.distance ? ` — <strong>${s.distance.toFixed(1)} km</strong>` : ''}</p>
+            <p>📦 Antal i lager: <strong>${s.stock} st</strong></p>
             <p>🗂 Hylla: <strong>${s.shelf}</strong></p>
-            <p>🔍 ${s.debug}</p>
           </div>
         `).join('');
 
