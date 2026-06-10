@@ -22,60 +22,15 @@ async function findArboga() {
         );
         const storesData = await storeRes.json();
         const stores = storesData.siteSearchResults || [];
-if (stores.length > 0) {
-  status.textContent = '🔍 Store keys: ' + Object.keys(stores[0]).join(', ');
-  return;
-}
 
         if (stores.length === 0) {
-          status.textContent = '😔 Inga butiker hittades i närheten.';
+          status.textContent = '😔 Inga butiker hittades. Data: ' + JSON.stringify(storesData).slice(0, 200);
           return;
         }
 
-        status.textContent = `📦 Hittade ${stores.length} butiker, kontrollerar lager...`;
-
-        const checks = await Promise.all(
-          stores.slice(0, 15).map(async (store) => {
-            try {
-              const res = await fetch(
-                proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?articleNumberOrBarCode=${ARTICLE_ID}&storeId=${store.siteId}`)
-              );
-              const data = await res.json();
-
-              return {
-                name: store.name,
-                address: `${store.address}, ${store.city}`,
-                distance: store.distance,
-                quantity: '?',
-                shelf: '?',
-                placement: '?',
-                debug: JSON.stringify(data).slice(0, 300)
-              };
-            } catch (e) {
-              return null;
-            }
-          })
-        );
-
-        const found = checks
-          .filter(Boolean)
-          .sort((a, b) => a.distance - b.distance);
-
-        if (found.length === 0) {
-          status.textContent = '😔 Arboga hittades inte i lager i närheten.';
-          return;
-        }
-
-        status.textContent = `✅ Hittade ${found.length} butiker:`;
-        results.innerHTML = found.map(s => `
-          <div class="store-card">
-            <h3>${s.name}</h3>
-            <p>📍 ${s.address} — <strong>${s.distance.toFixed(1)} km</strong></p>
-            <p>📦 Antal: <strong>${s.quantity}</strong></p>
-            <p>🗂 Hylla: <strong>${s.shelf}</strong></p>
-            <p>🔍 ${s.debug}</p>
-          </div>
-        `).join('');
+        // Show raw store object so we can see field names
+        status.textContent = '🔍 ' + JSON.stringify(stores[0]).slice(0, 400);
+        return;
 
       } catch (err) {
         status.textContent = '❌ Fel: ' + err.message;
@@ -83,7 +38,7 @@ if (stores.length > 0) {
       }
     },
     () => {
-      status.textContent = '❌ Kunde inte hämta din position. Tillåt platsåtkomst i webbläsaren.';
+      status.textContent = '❌ Kunde inte hämta din position.';
     }
   );
 }
