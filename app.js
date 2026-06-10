@@ -37,19 +37,15 @@ async function findArboga() {
                 proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?articleNumberOrBarCode=${ARTICLE_ID}&storeId=${store.siteId}`)
               );
               const data = await res.json();
-              if (!data || !data.products) {
-  return { name: store.name, address: `${store.address}, ${store.city}`, distance: store.distance, debug: JSON.stringify(data).slice(0, 200) };
-}
-const product = data.products[0];
-if (!product) return null;
 
               return {
                 name: store.name,
                 address: `${store.address}, ${store.city}`,
                 distance: store.distance,
-                quantity: product.inventory?.inventoryLevel ?? '?',
-                shelf: product.inventory?.shelf ?? '?',
-                placement: product.inventory?.placement ?? '?',
+                quantity: '?',
+                shelf: '?',
+                placement: '?',
+                debug: JSON.stringify(data).slice(0, 300)
               };
             } catch (e) {
               return null;
@@ -66,16 +62,16 @@ if (!product) return null;
           return;
         }
 
-        status.textContent = `✅ Hittade ${found.length} butiker med Arboga i lager:`;
+        status.textContent = `✅ Hittade ${found.length} butiker:`;
         results.innerHTML = found.map(s => `
-  <div class="store-card">
-    <h3>${s.name}</h3>
-    <p>📍 ${s.address} — <strong>${s.distance.toFixed(1)} km</strong></p>
-    <p>📦 Antal i lager: <strong>${s.quantity}</strong></p>
-    <p>🗂 Hylla: <strong>${s.shelf}</strong> &nbsp;|&nbsp; Placering: <strong>${s.placement}</strong></p>
-    <p>${s.debug ? '🔍 ' + s.debug : ''}</p>
-  </div>
-`).join('');
+          <div class="store-card">
+            <h3>${s.name}</h3>
+            <p>📍 ${s.address} — <strong>${s.distance.toFixed(1)} km</strong></p>
+            <p>📦 Antal: <strong>${s.quantity}</strong></p>
+            <p>🗂 Hylla: <strong>${s.shelf}</strong></p>
+            <p>🔍 ${s.debug}</p>
+          </div>
+        `).join('');
 
       } catch (err) {
         status.textContent = '❌ Fel: ' + err.message;
