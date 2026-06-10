@@ -68,13 +68,14 @@ if (!product) return null;
 
         status.textContent = `✅ Hittade ${found.length} butiker med Arboga i lager:`;
         results.innerHTML = found.map(s => `
-          <div class="store-card">
-            <h3>${s.name}</h3>
-            <p>📍 ${s.address} — <strong>${s.distance.toFixed(1)} km</strong></p>
-            <p>📦 Antal i lager: <strong>${s.quantity}</strong></p>
-            <p>🗂 Hylla: <strong>${s.shelf}</strong> &nbsp;|&nbsp; Placering: <strong>${s.placement}</strong></p>
-          </div>
-        `).join('');
+  <div class="store-card">
+    <h3>${s.name}</h3>
+    <p>📍 ${s.address} — <strong>${s.distance.toFixed(1)} km</strong></p>
+    <p>📦 Antal i lager: <strong>${s.quantity}</strong></p>
+    <p>🗂 Hylla: <strong>${s.shelf}</strong> &nbsp;|&nbsp; Placering: <strong>${s.placement}</strong></p>
+    <p>${s.debug ? '🔍 ' + s.debug : ''}</p>
+  </div>
+`).join('');
 
       } catch (err) {
         status.textContent = '❌ Fel: ' + err.message;
