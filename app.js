@@ -1,5 +1,8 @@
-const API_KEY = '8d39a7340ee7439f8b4c1e995c8f3e4a';
 const ARTICLE_ID = '1139232';
+
+function proxyUrl(url) {
+  return `/api/proxy?url=${encodeURIComponent(url)}`;
+}
 
 async function findArboga() {
   const status = document.getElementById('status');
@@ -14,21 +17,17 @@ async function findArboga() {
       status.textContent = '🔍 Söker butiker...';
 
       try {
-        // Get nearby stores
         const storeRes = await fetch(
-          `https://api-extern.systembolaget.se/sb-api-ecommerce/v1/sitesearch/site/?lat=${lat}&lng=${lng}`,
-          { headers: { 'Ocp-Apim-Subscription-Key': API_KEY } }
+          proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/sitesearch/site/?lat=${lat}&lng=${lng}`)
         );
         const stores = await storeRes.json();
 
         status.textContent = '📦 Kontrollerar lagerstatus...';
 
-        // Check stock in each store
         const checks = await Promise.all(
           stores.slice(0, 15).map(async (store) => {
             const res = await fetch(
-              `https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?articleNumberOrBarCode=${ARTICLE_ID}&storeId=${store.siteId}`,
-              { headers: { 'Ocp-Apim-Subscription-Key': API_KEY } }
+              proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?articleNumberOrBarCode=${ARTICLE_ID}&storeId=${store.siteId}`)
             );
             const data = await res.json();
             const product = data?.products?.[0];
@@ -75,5 +74,4 @@ async function findArboga() {
   );
 }
 
-// Run automatically when page loads
 window.addEventListener('load', findArboga);
