@@ -22,25 +22,35 @@ async function findArboga() {
         );
         const stores = await storeRes.json();
 
-        status.textContent = '📦 Kontrollerar lagerstatus...';
+        // Debug: show what we got back
+        if (!Array.isArray(stores)) {
+          status.textContent = '❌ Oväntat svar från butiks-API: ' + JSON.stringify(stores).slice(0, 300);
+          return;
+        }
+
+        status.textContent = `📦 Hittade ${stores.length} butiker, kontrollerar lager...`;
 
         const checks = await Promise.all(
           stores.slice(0, 15).map(async (store) => {
-            const res = await fetch(
-              proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?articleNumberOrBarCode=${ARTICLE_ID}&storeId=${store.siteId}`)
-            );
-            const data = await res.json();
-            const product = data?.products?.[0];
-            if (!product) return null;
+            try {
+              const res = await fetch(
+                proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?articleNumberOrBarCode=${ARTICLE_ID}&storeId=${store.siteId}`)
+              );
+              const data = await res.json();
+              const product = data?.products?.[0];
+              if (!product) return null;
 
-            return {
-              name: store.name,
-              address: `${store.address}, ${store.city}`,
-              distance: store.distance,
-              quantity: product.inventory?.inventoryLevel ?? '?',
-              shelf: product.inventory?.shelf ?? '?',
-              placement: product.inventory?.placement ?? '?',
-            };
+              return {
+                name: store.name,
+                address: `${store.address}, ${store.city}`,
+                distance: store.distance,
+                quantity: product.inventory?.inventoryLevel ?? '?',
+                shelf: product.inventory?.shelf ?? '?',
+                placement: product.inventory?.placement ?? '?',
+              };
+            } catch (e) {
+              return null;
+            }
           })
         );
 
