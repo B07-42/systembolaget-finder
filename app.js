@@ -37,8 +37,11 @@ async function findArboga() {
                 proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?articleNumberOrBarCode=${ARTICLE_ID}&storeId=${store.siteId}`)
               );
               const data = await res.json();
-              const product = data?.products?.[0];
-              if (!product) return null;
+              if (!data || !data.products) {
+  return { name: store.name, address: `${store.address}, ${store.city}`, distance: store.distance, debug: JSON.stringify(data).slice(0, 200) };
+}
+const product = data.products[0];
+if (!product) return null;
 
               return {
                 name: store.name,
