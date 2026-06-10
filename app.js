@@ -44,7 +44,7 @@ async function findArboga() {
 
         // Check stock in each store
         const checks = await Promise.all(
-          stores.slice(0, 20).map(async (store) => {
+          stores.slice(0, 50).map(async (store) => {
             try {
               const res = await fetch(
                 proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/stockbalance/store/${store.siteId}/${PRODUCT_ID}/`)
