@@ -1,14 +1,9 @@
-const API_KEY = 'cfc702aed3094c86b92d6d4ff7a54c84';
+const API_KEY = '8d39a7340ee7439f8b4c1e995c8f3e4a';
+const ARTICLE_ID = '1139232';
 
-document.getElementById('search-btn').addEventListener('click', () => {
-  const articleId = document.getElementById('article-id').value.trim();
+async function findArboga() {
   const status = document.getElementById('status');
   const results = document.getElementById('results');
-
-  if (!articleId) {
-    status.textContent = 'Ange ett artikelnummer.';
-    return;
-  }
 
   status.textContent = '📍 Hämtar din position...';
   results.innerHTML = '';
@@ -21,7 +16,7 @@ document.getElementById('search-btn').addEventListener('click', () => {
       try {
         // Get nearby stores
         const storeRes = await fetch(
-          `https://api-extern.systembolaget.se/site/v1/site?lat=${lat}&lng=${lng}`,
+          `https://api-extern.systembolaget.se/sb-api-ecommerce/v1/sitesearch/site/?lat=${lat}&lng=${lng}`,
           { headers: { 'Ocp-Apim-Subscription-Key': API_KEY } }
         );
         const stores = await storeRes.json();
@@ -32,7 +27,7 @@ document.getElementById('search-btn').addEventListener('click', () => {
         const checks = await Promise.all(
           stores.slice(0, 15).map(async (store) => {
             const res = await fetch(
-              `https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?articleNumberOrBarCode=${articleId}&storeId=${store.siteId}`,
+              `https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?articleNumberOrBarCode=${ARTICLE_ID}&storeId=${store.siteId}`,
               { headers: { 'Ocp-Apim-Subscription-Key': API_KEY } }
             );
             const data = await res.json();
@@ -45,7 +40,7 @@ document.getElementById('search-btn').addEventListener('click', () => {
               distance: store.distance,
               quantity: product.inventory?.inventoryLevel ?? '?',
               shelf: product.inventory?.shelf ?? '?',
-              row: product.inventory?.placement ?? '?',
+              placement: product.inventory?.placement ?? '?',
             };
           })
         );
@@ -55,22 +50,22 @@ document.getElementById('search-btn').addEventListener('click', () => {
           .sort((a, b) => a.distance - b.distance);
 
         if (found.length === 0) {
-          status.textContent = 'Artikeln hittades inte i lager i närheten.';
+          status.textContent = '😔 Arboga hittades inte i lager i närheten.';
           return;
         }
 
-        status.textContent = `✅ Hittade ${found.length} butiker med artikeln i lager:`;
+        status.textContent = `✅ Hittade ${found.length} butiker med Arboga i lager:`;
         results.innerHTML = found.map(s => `
           <div class="store-card">
             <h3>${s.name}</h3>
             <p>📍 ${s.address} — <strong>${s.distance.toFixed(1)} km</strong></p>
             <p>📦 Antal i lager: <strong>${s.quantity}</strong></p>
-            <p>🗂 Hylla: <strong>${s.shelf}</strong> &nbsp;|&nbsp; Placering: <strong>${s.row}</strong></p>
+            <p>🗂 Hylla: <strong>${s.shelf}</strong> &nbsp;|&nbsp; Placering: <strong>${s.placement}</strong></p>
           </div>
         `).join('');
 
       } catch (err) {
-        status.textContent = '❌ Något gick fel. Kontrollera artikelnumret och försök igen.';
+        status.textContent = '❌ Något gick fel. Försök igen.';
         console.error(err);
       }
     },
@@ -78,4 +73,7 @@ document.getElementById('search-btn').addEventListener('click', () => {
       status.textContent = '❌ Kunde inte hämta din position. Tillåt platsåtkomst i webbläsaren.';
     }
   );
-});
+}
+
+// Run automatically when page loads
+window.addEventListener('load', findArboga);
