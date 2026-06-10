@@ -3,23 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Systembolaget Finder</title>
+  <title>Arboga Finder</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="container">
-    <h1>🍷 Systembolaget Finder</h1>
-    <p class="subtitle">Hitta närmaste butik med din artikel i lager</p>
-
-    <div class="search-box">
-      <input type="text" id="article-id" placeholder="Artikelnummer (t.ex. 72411)" />
-      <button id="search-btn">Sök</button>
-    </div>
-
+    <h1>🍺 Arboga Finder</h1>
+    <p class="subtitle">Visar närmaste butik med Arboga 10,2 i lager</p>
+    <button id="search-btn" onclick="findArboga()">🔄 Sök igen</button>
     <div id="status"></div>
     <div id="results"></div>
   </div>
-
   <script src="app.js"></script>
 </body>
 </html>
