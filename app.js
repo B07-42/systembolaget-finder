@@ -65,7 +65,7 @@ async function findArboga() {
         `).join('');
 
       } catch (err) {
-        status.textContent = '❌ Något gick fel. Försök igen.';
+        status.textContent = '❌ Fel: ' + err.message;
         console.error(err);
       }
     },
