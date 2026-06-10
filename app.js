@@ -21,12 +21,10 @@ async function findArboga() {
           proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/sitesearch/site/?lat=${lat}&lng=${lng}`)
         );
         const storesData = await storeRes.json();
-status.textContent = '❌ Data: ' + JSON.stringify(storesData).slice(0, 500);
-return;
+        const stores = storesData.siteSearchResults || [];
 
-        // Debug: show what we got back
-        if (!Array.isArray(stores)) {
-          status.textContent = '❌ Oväntat svar från butiks-API: ' + JSON.stringify(stores).slice(0, 300);
+        if (stores.length === 0) {
+          status.textContent = '😔 Inga butiker hittades i närheten.';
           return;
         }
 
