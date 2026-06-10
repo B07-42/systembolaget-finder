@@ -1,0 +1,3 @@
+
+/api/store/*  https://api-extern.systembolaget.se/site/v1/site/:splat  200
+/api/search/* https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search/:splat  200
