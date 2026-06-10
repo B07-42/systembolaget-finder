@@ -18,7 +18,7 @@ async function findArboga() {
 
       try {
         const storeRes = await fetch(
-          proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/sitesearch/site/?lat=${lat}&lng=${lng}`)
+          proxyUrl(`https://api-extern.systembolaget.se/sb-api-ecommerce/v1/productsearch/search?articleNumberOrBarCode=${ARTICLE_ID}&selectedSite=${store.siteId}`)
         );
         const storesData = await storeRes.json();
         const stores = storesData.siteSearchResults || [];
